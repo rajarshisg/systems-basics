@@ -24,13 +24,13 @@ type EventLoop struct {
 }
 
 // Add adds a new task to the mainTasks channel for immediate processing.
-func Add(eventLoop *EventLoop, task Task) {
-	eventLoop.mainTasks <- task // Push task to the mainTasks channel for execution
+func Add(eventLoop *EventLoop, task *Task) {
+	eventLoop.mainTasks <- *task // Push task to the mainTasks channel for execution
 }
 
 // AddToTaskQueue adds a new blocking task to the taskQueue for later processing.
-func AddToTaskQueue(eventLoop *EventLoop, task Task) {
-	eventLoop.taskQueue <- task // Push the task to the taskQueue
+func AddToTaskQueue(eventLoop *EventLoop, task *Task) {
+	eventLoop.taskQueue <- *task // Push the task to the taskQueue
 }
 
 // StopEventLoop sends a stop signal to the event loop, instructing it to terminate.
@@ -74,7 +74,7 @@ func InitEventLoop(eventLoop *EventLoop, workerPoolSize int) *sync.WaitGroup {
 
 						// If a callback is provided, add it to the taskQueue
 						if task.Callback != nil {
-							AddToTaskQueue(eventLoop, Task{
+							AddToTaskQueue(eventLoop, &Task{
 								MainTask: task.Callback,  // The callback will be executed after the main task completes
 							})
 						}
@@ -114,14 +114,14 @@ func main() {
 	wg := InitEventLoop(&eventLoop, 10)
 
 	// Add non-blocking tasks to the event loop
-	Add(&eventLoop, Task{
+	Add(&eventLoop, &Task{
 		MainTask: func() {
 			fmt.Println("Non-blocking task 1 executed.")
 		},
 		IsBlocking: false,
 	})
 
-	Add(&eventLoop, Task{
+	Add(&eventLoop, &Task{
 		MainTask: func() {
 			fmt.Println("Non-blocking task 2 executed.")
 		},
@@ -129,7 +129,7 @@ func main() {
 	})
 
 	// Add blocking tasks with callbacks
-	Add(&eventLoop, Task{
+	Add(&eventLoop, &Task{
 		MainTask: func() {
 			time.Sleep(2 * time.Second) // Simulate a blocking task
 			fmt.Println("Blocking task 3 executed.")
@@ -140,7 +140,7 @@ func main() {
 		IsBlocking: true,
 	})
 
-	Add(&eventLoop, Task{
+	Add(&eventLoop, &Task{
 		MainTask: func() {
 			time.Sleep(4 * time.Second) // Simulate a long blocking task
 			fmt.Println("Blocking task 4 executed.")
@@ -152,7 +152,7 @@ func main() {
 	})
 
 	// Add another non-blocking task
-	Add(&eventLoop, Task{
+	Add(&eventLoop, &Task{
 		MainTask: func() {
 			fmt.Println("Non-blocking task 5 executed.")
 		},
@@ -167,5 +167,4 @@ func main() {
 
 	// Wait for the event loop to finish processing all tasks before exiting
 	wg.Wait()
-	
 }
